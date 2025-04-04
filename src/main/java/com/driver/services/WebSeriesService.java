@@ -19,12 +19,46 @@ public class WebSeriesService {
 
     public Integer addWebSeries(WebSeriesEntryDto webSeriesEntryDto)throws  Exception{
 
+        WebSeries existingSeries = webSeriesRepository.findBySeriesName(webSeriesEntryDto.getSeriesName());
+        if (existingSeries != null) {
+            throw new Exception("Series is already present");
+        }
+
+        // Fetch the production house
+        ProductionHouse productionHouse = productionHouseRepository.findById(webSeriesEntryDto.getProductionHouseId()).get();
+
+        // Create new web series
+        WebSeries webSeries = new WebSeries();
+        webSeries.setSeriesName(webSeriesEntryDto.getSeriesName());
+        webSeries.setAgeLimit(webSeriesEntryDto.getAgeLimit());
+        webSeries.setRating(webSeriesEntryDto.getRating());
+        webSeries.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
+        webSeries.setProductionHouse(productionHouse);
+
+        // Add to production house's list
+        productionHouse.getWebSeriesList().add(webSeries);
+
+        // Update ratings
+        double totalRatings = 0;
+        int count = productionHouse.getWebSeriesList().size();
+        for (WebSeries ws : productionHouse.getWebSeriesList()) {
+            totalRatings += ws.getRating();
+        }
+        double avgRating = totalRatings / count;
+        productionHouse.setRatings(avgRating);
+
+        // Save both
+        productionHouseRepository.save(productionHouse);
+        //webSeriesRepository.save(webSeries);
+        WebSeries savedSeries = webSeriesRepository.findBySeriesName(webSeriesEntryDto.getSeriesName());
+        return savedSeries.getId();
+        //return webSeries.getId();
         //Add a webSeries to the database and update the ratings of the productionHouse
         //Incase the seriesName is already present in the Db throw Exception("Series is already present")
         //use function written in Repository Layer for the same
         //Dont forget to save the production and webseries Repo
 
-        return null;
+        //return null;
     }
 
 }
